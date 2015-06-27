@@ -1,0 +1,13 @@
+MANIFEST.in
+README.rst
+setup.py
+covariance/__init__.py
+covariance/binning_rot_coverage.py
+covariance/decimate.py
+covariance/eulerangles.py
+covariance/spider.py
+covariance.egg-info/PKG-INFO
+covariance.egg-info/SOURCES.txt
+covariance.egg-info/dependency_links.txt
+covariance.egg-info/not-zip-safe
+covariance.egg-info/top_level.txt

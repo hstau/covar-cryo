@@ -1,0 +1,23 @@
+Metadata-Version: 1.1
+Name: covariance
+Version: 0.1
+Summary: estiamtion of the covariance matrix
+Home-page: UNKNOWN
+Author: Hstau Y Liao
+Author-email: hstau.y.liao@gmail.com
+License: UNKNOWN
+Description: Covariance 
+        --------
+        
+        This code estimates the covariance matrix using an adaptive domain.
+        
+        
+        
+Keywords: covariance estimation cryo-EM
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Alpha
+Classifier: Environment :: Console
+Classifier: Environment :: X11 Applications
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Programming Language :: Python :: 2.7 :: chimera
+Classifier: Intended Audience :: End Users/Desktop
