@@ -1,0 +1,53 @@
+'''
+.. Created 2015
+.. codeauthor:: Hstau Y Liao <hstau.y.liao@gmail.com>
+'''
+
+import sys
+import numpy as np
+import math
+
+def fillin3(coarse):
+    N = 8*coarse.shape[0]
+    NX = round(N**0.333)
+    NX2 = round(NX/2.0)
+    coarse.reshape((NX2,NX2,NX2))
+    fine = np.zeros((NX,NX,NX))
+    for i in range(2):
+        for j in range(2):
+            for k in range(2):
+                fine[i:2,j:2,k:2] = coarse
+    fine.flatten(1)
+    return fine
+    
+    
+def expand_volume(array, ind3, v_dim):
+    # get coarse and fine info separately
+    find3 = ind3[0]
+    cind3 = ind3[1]
+    # create array
+    N = v_dim[0]*v_dim[1]*v_dim[2]
+    result = np.zeros(N)
+    result2 = np.zeros(N/8)
+    # coarse grid
+    I = np.nonzero(cind3)
+    result2[I] = array[cind3[I]]
+    result[I] = fillin3(result2)
+    # fine grid
+    I = np.nonzero(find3)
+    result[I] = array[find3[I]]
+    
+    return result
+
+if __name__ == '__main__':
+   array = sys.argv[1]
+   ind3 = sys.argv[2]
+   v_dim = sys.argv[3]
+
+   expand_volume(array,ind3, v_dim)
+   
+
+                        
+
+
+

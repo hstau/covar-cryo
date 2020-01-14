@@ -1,0 +1,63 @@
+'''
+.. Created 2015
+.. codeauthor:: Hstau Y Liao <hstau.y.liao@gmail.com>
+'''
+
+import sys
+import spider
+import eulerangles as eu
+import numpy as np, logging
+import math
+
+from arachnid.core.image import ndimage_file as imfile
+from arachnid.core.metadata import format
+
+def create_map3(image_in):
+    mask = imfile.read_image(image_in)
+    np.transpose(mask,(1,0,2))
+    NX = mask.shape[0]
+    NY = mask.shape[1]
+    NZ = mask.shape[2] 
+    NX2 = NX/2
+    NY2 = NY/2
+    NZ2 = NZ/2
+    # array of volume sizes
+    v_dim = np.array([NX, NY, NZ])
+    inda2 = np.array([1 NX2 NY2*NX2])
+    # flatten
+    mask = mask.flatten(1)
+    # create the index vectors
+    find3 = np.zeros(len(mask))
+    cind3 = np.zeros(len(mask)/8)
+    # spherical mask
+    sph = sph_mask(v_dim)
+    mask = mask*sph.flatten(1)
+    # looping
+    for i in range(len(mask)):
+        a,b,c = decomp3(i,p_dim)
+        if mask[i] == 2:
+                find2[i,k] = -i;
+        elif mask[i] == 1:
+            a = np.floor(a/2)
+            b = np.floor(b/2)
+            c = np.floor(c/2)
+            m = a + b*NX2 + c*NY2*NX2
+            cind3[m] = m
+    # prunning     
+    for i in range(len(mask)):
+        a,b,c = decomp3(i,p_dim)
+        a = np.floor(a/2)
+        b = np.floor(b/2)
+        m = a + b*NX2 + c*NY2*NX2
+        if cind3[m] != 0:
+            find3[i] = 0
+
+# reducing the size of indexes
+I = np.nonzero(cind3)
+cind3[I] = range(len(I[0]))
+offset = len(I[0])
+I = np.nonzero(find3)
+find3[I,k] = cind3[I] + offset
+         
+
+

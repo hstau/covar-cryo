@@ -1,0 +1,236 @@
+'''
+.. Created 2015
+.. codeauthor:: Hstau Y Liao <hstau.y.liao@gmail.com>
+'''
+
+import sys
+import numpy as np
+import math
+import geometry as geo
+from scipy.sparse import coo_matrix
+
+from arachnid.core.image import ndimage_file
+from arachnid.core.metadata import format
+
+def get_uv(psi,theta,phi):
+    c1 = np.cos(psi)
+    c2 = np.cos(theta)
+    c3 = np.cos(phi)
+    s1 = np.sin(psi)
+    s2 = np.sin(theta)
+    s3 = np.sin(phi)
+
+    R = np.array([[c1*c2*c3-s1*s3,    c3*s1+c1*c2*s3,    c1*(-s2)],\
+                  [(-c1)*s3-c2*c3*s1, c1*c3-c2*s1*s3,    s1*s2], \
+                  [c3*s2,             s2*s3,             c2   ]])
+    #test 
+    R1 = euler_to_rot(psi,theta,phi)
+    nn = np.linalg.norm(R1-RR)
+    print nn
+    # done test
+    R = R.T
+    n = np.dot(R,np.array([[0],[0],[1]]))
+    u = np.dot(R,np.array([[1],[0],[0]]))
+    v = np.dot(R,np.array([[0],[1],[0]]))
+    
+    return (n,u,v)
+
+def gtrace(sp, u1, v1, rad2, pp, unit, v_dim, p_dim, ind2, ind3, factor, mat):
+    Mu = p_dim[0]
+    Mv = p_dim[1]
+    Mu2 = Mu/2
+    Mv2 = Mv/2
+    if sp == 1: # for coarse grid
+        Mu = Mu2
+        Mv = Mv2
+    ind = u1*Mv + v1 # use new indexing
+    ind = ind2[ind]
+    pos = []
+    if ind > 0:            # if within mas
+        #flag = 0
+        # positive side
+        pos.append(trace(rad2, pp, unit, v_dim, 0,factor))
+        # negative side
+        pos.appendtrace(pos, rad2, pp, -unit, v_dim, 1,factor)
+        # put together positive and negative sides
+        l = ind_we(pos, v_dim, ind3, factor)
+        on = np.ones(l.shape)
+        l = np.hstack((ind*on, l))
+        matn = np.vstack((mat, l))
+    else:
+        matn = mat
+
+    return matn
+
+def trace(pos, rad2, pp, unit, v_dim,start,factor):
+    NX = v_dim[0] 
+    NY = v_dim[1] 
+    NZ = v_dim[2]
+    N = NX*NY*NZ
+    # halving
+    NX2 = math.floor(NX/2)
+    NY2 = math.floor(NY/2)
+    NZ2 = math.floor(NZ/2)
+    # bound vector spider wadsworth center volume
+    bound = np.array([[NX2, NY2, NZ2]])
+    bound = bound.T
+    # squared radius
+    r2 = min(NX2,NY2)
+    r2 = min(r2,NZ2)
+    r2 = r2*r2
+    # step vector
+    d = unit/factor
+    p = pp + start*d # start is 1 if the origin is not to be counted
+    ds = 1/factor  # step size
+    max_dist = sqrt(r2+1-rad2) + 1
+    max_dist = sqrt(r2) + 1
+    K = math.floor(max_dist/ds) # maximum number of steps
+    # looping
+    for n in range(K)
+        z = np.round(p)
+        z = z.T
+        if np.all(z >= -bound) and np.all(z <= bound-1):
+            pos.append(z.tolist()) 
+        p = p + d
+    return pos
+
+
+def ind_we(pos,v_dim,ind3,factor):
+    find3 = ind3[0]
+    cind3 = ind3[1]
+    # convert pos to array for math stuff
+    pos = np.array(pos)
+    # initializa l
+    l = []
+    if pos.shape[0] > 0:
+        NX = v_dim[0] 
+        NY = v_dim[1] 
+        NZ = v_dim[2]
+        N = NX*NY*NZ
+        # in2 are the linear coordinates of pos
+        in2 = process(pos,v_dim,1)
+        on = np.ones(in2.shape)
+        # fine grid first
+        # A is a 1D sparse matrix whose elements corresponds to the linear coord
+        # collapsing
+        A=1.0/factor*coo_matrix((on,(in2,col)), shape=(N, 1))
+        # get the row, col, data back
+        in1 = A.row
+        aux = A.col
+        w = A.data
+        # storing results
+        co = find3(in1)
+        I = np.nonzero(co[0])
+        co = co(I);
+        wo = w(I);
+        if co.shape[0] > 0:
+        l = np.hstack((co, wo))
+  
+        # now the coarse grid
+        # find the Cartesian coords
+        a, b, c = decomp3(in1-1, v_dim)  # in1-1 must start from 0
+        v_dim1 = v_dim
+        # scaling and NO masking
+        a = math.floor(a/2)
+        b = math.floor(b/2)
+        c = math.floor(c/2)
+        pos1 = np.hstack((a,b,c)) # a b c already shifted
+        # scaling
+        v_dim1 = math.floor(v_dim1/2)
+        # recalculate A
+        in2 = process(pos1,v_dim1,0) # no shift applied
+        on = ones(in2.shape)
+        A = rsparse(in2,on,w,N,1) # collapsing
+        [in1 aux w] = find(A)
+        # storing results
+        co = cind3(in1)
+        I = find(co)
+        co = co(I)
+        wo = w(I)
+        if co.shape[0] > 0:
+            l = np.vstack((np.hstack((co, wo)),l))
+    return l
+
+def process(pos,v_dim,shift):
+    
+    NX = v_dim[0] 
+    NY = v_dim[1] 
+    NZ = v_dim[2]
+    # half
+    NX2 = math.floor(NX/2)
+    NY2 = math.floor(NY/2)
+    NZ2 = math.floor(NZ/2)
+    # index vector
+    inda = np.array([[1 NX NY*NX]])
+    if shift == 1: # all-positive coordinates
+        # shift vector (only if shift == 1)
+        sh = np.array([[NX2 NY2 NZ2]])
+        pos = pos + np.tile(sh,(pos.shape[0],1))
+
+    # linear coordinates
+    in2 = np.sum(pos* np.tile(inda,(pos.shape[0])),1) + 1 
+    # starts from 1 to avoid zero index in the sparse operation new coordinate
+    return in2
+
+
+
+def mat = project(euler,v_dim,p_dim,ind2,ind3,i):
+    factor = 20
+    # just need the i-th component
+    find2 = ind2[0]
+    cind2 = ind2[1]
+    find2 = find2[:,i]
+    cind2 = cind2[:,i]
+    ind2[0] = find2
+    ind2[1] = cind2
+    # get the unit vectors
+    euler = euler*np.pi/180
+    psi = euler[0]
+    theta = euler[1]
+    phi = euler[2]
+    unit,u,v = get_uv(psi,theta, phi)
+    # get the dimensions
+    Mu = p_dim[0]
+    Mv = p_dim[1]
+    Mu2 = Mu/2
+    Mv2 = Mv/2
+    # indeces in 3D
+    find3 = ind3[0]
+    cind3 = ind3[1]
+    # looping
+    for uu in range(Mu):
+        for vv in range(Mv):
+            rx = uu-Mu2-1
+            ry = vv-Mv2-1
+            pp = u*rx + v*ry
+            u1 = uu-1
+            v1 = vv-1
+            # trace with fine image grid
+            rad2 = rx*rx + ry*ry
+            mat = gtrace(0, u1, v1, rad2, pp,unit, v_dim, p_dim, find2, ind3, factor, mat)
+            # trace with coarse image grid 
+            if uu%2 == 1 && vv%2 == 1:
+                rx = uu-Mu2-0.5
+                ry = vv-Mv2-0.5 
+                pp = u*rx + v*ry # displace +0.5 in each coord
+                u1 = math.floor(u1/2)
+                v1 = math.floor(v1/2)
+                rad2 = rx*rx + ry*ry
+                mat = gtrace(1, u1, v1, rad2, pp,unit, v_dim, p_dim, cind2, ind3, factor, mat)           
+
+
+
+
+def ray_tracing(refang, v_dim, p_dim, mask,ind2,ind3):
+    phi = mcol(refang[:,2])
+    theta = mcol(refang[:,1])
+    psi = mcol(refang[:,0])
+    I = len(refang[:,0].shape[0]))
+    mat = np.array
+    for i in range(I):
+        euler = np.array([psi[i],theta[i],phi[i]])
+        mat = project(euler,v_dim,p_dim,ind2,ind3,i)
+        if i == 0:
+            amat = mat
+        else:
+            amat = np.append(amat,mat,1)
