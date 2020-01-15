@@ -1,0 +1,20 @@
+In chimera, to
+
+1. get the coordinates of a point in the marker set: getcrd sel
+2. set background color: set bg_color white
+3. get the transf matrix and applied to other segments: first fit map of
+40S segment to vol_all.spi, then transform DHX segment via a. matrixget
+filename, now edit filename and copy-paste the transf matrix for other segments and
+finally b. matrixset filename
+
+
+Results of various testing:
+
+finesp
+
+1.if use l1 minimization, map appears blob like (there is a fine line when tunning the parameter)
+2.if filtered to 0.3 prior to cov estimation, the map is not cut anymore.
+3.normalizing reproj individually seems to produce (an extra?) density inside the 40S
+
+
+

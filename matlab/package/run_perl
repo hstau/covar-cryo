@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+$exec='./spider';
+
+$arg='bat/spi @rotate 1';
+system("$exec $arg");
+
+# decimte here
+$arg='bat/spi @normalize 2';
+system("$exec $arg");
+
+$arg='bat/spi @rep_vol_reconst 3';           
+system("$exec $arg"); 
+
+$arg='bat/spi @reproj_ 4';
+system("$exec $arg");
+
+$arg='bat/spi @sub2_reconst 5';    
+system("$exec $arg");
+
+# decimate again
+
+#$arg='bat/spi @reconst 55';    
+#system("$exec $arg");
+
+#$arg='bat/spi @clean 6';
+#system("$exec $arg");
+
+# run create_mask_dens.m first, then:
+#$arg='bat/spi @rep_sub2reconst_mask 9';
+#system("$exec $arg");
+

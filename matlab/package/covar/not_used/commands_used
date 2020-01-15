@@ -1,0 +1,76 @@
+ALl these data come from
+/gil.raid/home_gil/liaoh/Gil_cluster/DHX/data/2D_var/particles/
+
+which in turn come from /home/liaoh/Gil_cluster/DHX/bootstrap/AMP/particles/
+
+data -> particles/
+
+binning_rot  # also weighted version
+
+rotate.bat
+
+now decimate
+xmipp_selfile_create "part_flip/rprj*" > all.sel
+xmipp_scale -i all.sel -xdim 130 -fourier
+
+run_perl:
+normalize.bat
+rep_vol_reconst.bat
+reproj_.bat
+sub2_reconst.bat
+
+xmipp_selfile_create "part_flip/fsar*" > all_fsar.sel
+xmipp_scale -i all_fsar.sel -xdim 32 -fourier
+
+xmipp_selfile_create "part_flip/sh_fsar*" > all_fsar_sh.sel
+xmipp_scale -i all_fsar_sh.sel -xdim 32 -fourier
+
+# clean
+
+clean.bat # also weighted version
+
+# project the mask
+rep_sub2reconst_mask.bat
+
+
+===========================
+
+% data set 620 has no filter
+
+% data set 288 filtered at 0.4+0.1
+
+==============================
+mask creation
+
+fpr mixed resol
+mask = create_mask_dens(0.75,32,
+'/guam.raid.home/liaoh/2D_var_DHX/new_with_covar_reduce_index_DHX/covar_old_data_model/sfvol_var_bp_32.spi');
+
+for coarse resol only
+mask = create_mask_dens(0.4,32,'matlab_3dvarcoarse_620_fil1.3.spi');
+
+for fine resol 
+mask = create_mask_dens(0.3,32,'var_1_3acoarse20_f02.spi');  USED SPIDER TO FILTER TO 0.2,0.3
+#mask = create_mask_dens(0.4,32,'matlab_3dvarcoarse_620_fil1.3.spi'); # old
+
+==========================
+
+angle coverage
+run euler_coverage.m
+source arachnid, then
+awk -F" " '{ print $3" " $4" " $5}' euler_620.spi > euler_620.star (NOT NECESSARY. SEE refangles.star)
+add the header
+ara-coverage -i euler_620.star -o cover_620.png
+beware the format of euler_620.star
+
+
+===========================
+
+new gridding
+
+xmipp_scale -i all.sel -xdim 66 -fourier
+
+xmipp_window -i all.sel -size 64 
+
+xmipp_scale -i all.sel -xdim 32 -fourier
+

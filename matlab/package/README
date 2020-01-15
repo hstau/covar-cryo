@@ -1,0 +1,91 @@
+Algorithm for Estimating the 3D covariance from projection data
+
+NOTE: Since the covriance picks up all kind of variability in the data, and the algorithm does attempt to remove variability due to counting noise, it is important that the data are free from any other sources of varibility (e.g., due to microscope magnification)
+
+SUMMARY:
+Given projection data, the algorithm does the following main steps
+
+1. bins the projection data according to the theta and phi angles,
+2. estimates the 2D covariance from the data corresponding to each bin,
+3. estimates the 3D covariance from all the 2D covariance.
+
+DATA:
+The data are cropped and centered particles with even window size (with SPIDER convention for the center of image), and with known Euler angles. 
+
+STEP 1: (BINNING)
+.Tessellation of the unit (half) sphere using SPIDER VO EA command. (Not the best but does the job.)  
+.Subroutine binning.m takes the particles, applies mirroring to get more counts per bin, and computes the new psi angles for each particle (closer to the poles, a small variation of phi or theta angles causes large variations of psi)
+
+STEP 2: (2D COVARIANCE)
+Since the 3D covariance estimation involves many unknowns, there is an option to estimate only for a subset of voxels inside a given (3D) mask. This mask is projected onto each orientation, as given by the bin angles, producing a 2D mask.   
+
+.Subroutine create_ind2d.m finds the voxels inside a 2D mask and assigns them indexes.
+.Subroutine cov_data computes the 2D covariance. The 2D covariance of noise is also needed, and this requires shifting particles.
+
+STEP 3: (3D covariance)
+Basically, a system of linear equations is formed, where the unknowns are the 3D covariance and the r.h.s. are the 2D covariance. The coefficients of the system are obtained by first computing the lengths of intersection between a ray and a voxel, followed by computing pairwise multiplications of these lengths.
+
+.create_mat.m computes the lengths of intersection
+.coeff.m calculates the coefficients
+.reconst.m iteratively solves the system of linear equations to obtain the 3D covariance
+
+
+SPECIFIC STEPS:
+
+.Create a tessellation of the unit sphere using the SPIDER commmand VO EA
+.Bin the particles according to their angle:
+	binning.m  
+(Currently the rotation matrix is used to find the adjusted psi angle. Quaternion might be a better choice.)
+.rotate inplane rotation (psi angle):
+	rotate.bat 
+.(Optional) decimate particles to a lower resolution (here 130), using e.g. XMIPP:
+	xmipp_selfile_create "part_flip/rprj*" > all.sel
+	xmipp_scale -i all.sel -xdim 130 -fourier
+.run_perl, only the part that contains:
+	normalize.bat
+	rep_vol_reconst.bat
+	reproj_.bat
+	sub2_reconst.bat	
+.decimate again to size 32:
+	xmipp_selfile_create "part_flip/fsar*" > all_fsar.sel
+	xmipp_scale -i all_fsar.sel -xdim 32 -fourier
+	xmipp_selfile_create "part_flip/sh_fsar*" > all_fsar_sh.sel
+	xmipp_scale -i all_fsar_sh.sel -xdim 32 -fourier
+.reconstruct volume from variances and averages (sanity check)
+	reconst.bat
+.clean intermediate results that are not used, could use:
+	clean.bat
+.create a mask covering regions of high variance:
+	create_mask_dens
+.project the mask in each bin angle:
+	rep_sub2reconst_mask.bat
+.get the indices of pixels (and voxels) inside the mask:
+	create_ind2d.m
+	create_ind3d.m
+.calculate the 2D covariance
+	cov_data.m
+.get the lengths of intersetion:
+	create_mat.m
+.get the coefficients for the system of equations:
+	coeff.m
+.estimate the 3D covariance:
+	reconst.m
+
+"LIST" OF FILES:
+.ref_ang   	- reference angles in SPIDER format
+.align     	- alignment parameters in SPIDER format
+.raw_pref 	- projection data or particles 
+.data_pref 	- normalized projection data or particles 
+.mir_pref  	- projection data corrected for the mirroring 
+.bin_sel_pref	- indices of particles in a bin 
+.sel_ang   	- indices of angle bins 
+.psi_adj   	- adjusted psi angles 
+.coeff_pref     - coefficients per bin angle 
+.sel_prj_pref   - indeces of particles
+.sdata_pref     - shifted particles
+.good_part      - indeces of selected particles
+.cov2d_pref     - 2D covariance 
+.mask_pref      - 2D mask files 
+.maskfile       - 3D mask file 
+
+
