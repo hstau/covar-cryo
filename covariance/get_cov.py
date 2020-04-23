@@ -12,9 +12,9 @@ def cov(fin, imgs1,imgs2,PrD1,PrD2):
 
     for k in range(K):
         prj1 = imgs1[k,:,:]
-        im1[k,:] = compress_data(fin, prj1, PrD1)
+        im1[k,:] = compress_data.op(fin, prj1, PrD1)
         prj2 = imgs2[k,:,:]
-        im2[k,:] = compress_data(fin, prj2, PrD2)
+        im2[k,:] = compress_data.op(fin, prj2, PrD2)
 
     ave1 = np.mean(im1,0)
     ave2 = np.mean(im2,0)
@@ -26,14 +26,14 @@ def cov(fin, imgs1,imgs2,PrD1,PrD2):
 
     return cov_2d
 
-def op(CG, N, fin, PrD1, PrD2):
+def op(N, fin, PrD1, PrD2):
     # read prj images
     dist_file = '{}prD_{}'.format(p.dist_file, PrD1)
     data = myio.fin1(dist_file)
-    imgs1 = data['ImgAll']
+    imgs1 = data['imgAll']
     dist_file = '{}prD_{}'.format(p.dist_file, PrD2)
     data = myio.fin1(dist_file)
-    imgs2 = data['ImgAll']
+    imgs2 = data['imgAll']
 
     # original image part
     cov_2d = cov(fin,imgs1,imgs2,PrD1,PrD2)

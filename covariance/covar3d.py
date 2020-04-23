@@ -7,6 +7,7 @@ import multiprocessing
 from functools import partial
 from subprocess import Popen
 import covar3d_single
+import covar3d_all
 import create_map_mask2D
 
 '''
@@ -128,6 +129,9 @@ def op(*argv):
                     time.sleep(0.05)
                 pool.close()
                 pool.join()
+
+    # merge results
+    covar3d_all.op(CG, q, p.nPix, op)
 
     set_params.op(0)
     return

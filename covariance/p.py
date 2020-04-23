@@ -208,7 +208,7 @@ def create_dir():
     call(["mkdir", "-p", out_dir+'/topos/'])
     call(["mkdir", "-p", out_dir + '/topos/Euler_PrD/'])
 
-    global dist_file,psi_file,psi2_file,\
+    global dist_file,cov_file, psi_file,psi2_file,\
         movie2d_file,EL_file,tau_file,OM_file,OM1_file,Var_file,rho_file,\
         remote_file,NLSA_file,traj_file,CC_file,CC_OF_file,CC_meas_file,\
         CC_graph_file,ref_ang_file,ref_ang_file1,tess_file,nowTime_file
@@ -216,6 +216,7 @@ def create_dir():
     tess_file = os.path.join(user_dir, 'outputs_{}/selecGCs'.format(proj_name))
     nowTime_file = os.path.join(user_dir, 'outputs_{}/nowTime'.format(proj_name))
     dist_file = '{}/IMGs_'.format(dist_dir)
+    cov_file = '{}/cov_'.format(cov_dir)
     psi_file = '{}/gC_trimmed_psi_'.format(psi_dir)
     psi2_file = '{}/S2_'.format(psi2_dir)
     EL_file = '{}/S2_'.format(EL_dir)

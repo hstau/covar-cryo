@@ -96,6 +96,16 @@ def psi_ang(PD):
     psi = 0.0 # already done in getDistances np.mod(psi,2*np.pi)*(180/np.pi)
     return (phi,theta,psi)
 
+def psi_ang_all(PDs):
+    phi = []
+    theta = []
+    psi = []
+    for PD in PDs:
+        phi.append(psi_ang(PD)[0])
+        theta.append(psi_ang(PD)[1])
+        psi.append(psi_ang(PD)[2])
+    return (phi, theta, psi)
+
 def calc_avg_pd(q,nS):
     # Calculate average projection directions (from matlab code)
     """PDs = 2*[q(2,:).*q(4,:) - q(1,:).*q(3,:);...
@@ -107,3 +117,18 @@ def calc_avg_pd(q,nS):
 		 q[0,:]**2 + q[3,:]**2 - np.ones((1,nS))/2.0))
 
     return PDs
+
+def cal_avg_pd_all(q,CG):
+    Ps = []
+    for PrD in range(len(CG)):
+        ind = CG[PrD]
+        q1 = q[:, ind]
+        nS = ind.shape[0]
+        # Calculate average projection directions
+        PDs = calc_avg_pd(q1, nS)
+        # reference PR is the average
+        PD = np.sum(PDs, 1)
+        # make it a unit vector
+        PD = PD / np.linalg.norm(PD)
+        Ps.append(PD)
+    return Ps
