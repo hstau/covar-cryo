@@ -91,7 +91,7 @@ def op(*argv):
                 offset = p.numberofJobs - count(p.numberofJobs)
                 progress2.emit(int((offset / float(p.numberofJobs)) * 100))
                 time.sleep(5)
-
+    
     else:
         print "Computing the eigenvectors of the 3D covariance"
         doSave = dict(outputFile='', Is=True)

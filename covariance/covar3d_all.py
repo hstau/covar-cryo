@@ -30,13 +30,6 @@ def hmv(y):
     v = v.flatten()
     return v
 
-def Cv2(CG, N, fin, PDs,C):
-    for PD1 in PDs:
-        for PD2 in PDs:
-            F1 = PD1 + 1
-            F2 = PD2 + 1
-            C[PD1*N: F1*N,PD2*N: F2*N] = get_cov.op(CG, N, fin, PD1, PD2)
-    return C
 
 def op(CG, q, N, op):
 
@@ -48,16 +41,12 @@ def op(CG, q, N, op):
     d = dict(phi=phi, theta=theta, psi=psi)
     df = pandas.DataFrame(data=d)
     I = N*N
-    k = 6
-
-    which = 'LM'
-    maxiter = 200
-    tol = 0
+    k = 3
 
     if op == 0: # heuristics method
         # reconstruction
         for i in range(k): # for each eigenv
-            imgs = np.zeros(len(CG), N, N)
+            imgs = np.zeros((len(CG), N, N))
             for prD in range(len(CG)):
                 cov_file = '{}prD_{}'.format(p.cov_file, prD)
                 data = myio.fin1(cov_file)
@@ -70,6 +59,7 @@ def op(CG, q, N, op):
                 mrc = mrcfile.open(stack_file, mode='r+')
             else:
                 mrc = mrcfile.new(stack_file)
+            imgs = imgs.astype(np.float32)
             mrc.set_data(imgs)
             star.write_star(ang_file, stack_file, df)
 
@@ -91,19 +81,19 @@ def op(CG, q, N, op):
 
         if op == 1:  # empirical RRt
             k = 15
-            U, S, V = svds(mv, k, which, maxiter, tol)
+            U, S, V = svds(mv, k, which='LM', maxiter=100, tol=0)
             RRt = np.dot(U[:, :k].dot(np.diag((S * S)[:k])), U.T[:k, :])
             k = 6
             RRt1 = np.dot(U[:, :k].dot(np.diag((1. / (S * S))[:k])), U.T[:k, :])
-            Minv = RRt1
+            minv = RRt1
 
         #elif op == 2:  leaving this for later
-        #    Minv = theo_R1()
+        #    minv = theo_R1()
 
         else:
             exit()
 
-        vals, vecs = eigsh(Cy, k, RRt, which, maxiter, tol, Minv)
+        vals, vecs = eigsh(Cy, k, RRt, which='LM', maxiter=100, tol=0, Minv=minv)
         for i in range(k):  # for each eigenv
             result = hmv(vecs[:, i])
             # output the reconstrcution
