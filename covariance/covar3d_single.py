@@ -15,21 +15,6 @@ import compress_data
 import p
 
 
-def Cv(CG, N, fin, PDs):
-    Cy = []
-    for PD in PDs:
-        Cy.append(get_cov.op(CG, N, fin, PD,PD))
-    return Cy
-
-def Cv2(CG, N, fin, PDs,C):
-    for PD1 in PDs:
-        for PD2 in PDs:
-            F1 = PD1 + 1
-            F2 = PD2 + 1
-            C[PD1*N: F1*N,PD2*N: F2*N] = get_cov.op(CG, N, fin, PD1, PD2)
-    return C
-
-
 def op(input_data, doSave, fin, N, q, op):
     dist_file = input_data[0]
     data = myio.fin1(dist_file)
@@ -53,16 +38,13 @@ def op(input_data, doSave, fin, N, q, op):
                over S^2
     '''
     k = 6
-    which = 'LM'
-    maxiter = 200
-    tol = 0
 
     # compute the 2D covariance for pairs of prDs
     Cy_ind = get_cov.op(N, fin, prD[0], prD[1])
 
     if op == 0: # Heuristic: Cy is block diagonal
         # In this case RRt is the identity matrix times a constant
-        vals, vecs = eigsh(Cy_ind, k, which, maxiter, tol)
+        vals, vecs = eigsh(Cy_ind, k, which='LM', maxiter=100, tol=0)
         ix = np.argsort(vals)[::-1]
         vals = np.sort(vals)[::-1]
         vecs = vecs[:, ix]

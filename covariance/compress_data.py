@@ -2,12 +2,8 @@ import numpy as np
 
 def op(fin, prj, PrD):
     finn = fin[PrD,:]
-    ind = np.nonzero(finn)
-    I = len(ind)
-    da = np.zeros(I)
+    ind = np.nonzero(finn)[0]
     data = prj.flatten()
-    print 'finn=',finn
-    print 'ind=',ind
-    da[finn] = data[ind]
-    return da
+    da = data[ind]
+    return (da,ind)
     

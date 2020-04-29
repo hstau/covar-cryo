@@ -30,6 +30,14 @@ def hmv(y):
     v = v.flatten()
     return v
 
+def Cv2(CG, N, fin, PDs,C):
+    for PD1 in PDs:
+        for PD2 in PDs:
+            F1 = PD1 + 1
+            F2 = PD2 + 1
+            C[PD1*N: F1*N,PD2*N: F2*N] = get_cov.op(CG, N, fin, PD1, PD2)
+    return C
+
 def op(CG, q, N, op):
 
     a.init()
@@ -72,6 +80,14 @@ def op(CG, q, N, op):
     else:
         K = len(CG) * I
         Cy = lil_matrix((K, K), dtype=np.float64)
+        for prD1 in range(len(CG)):
+            F1 = prD1 + 1
+            for prD2 in range(len(CG)):
+                F2 = prD2 + 1
+                cov_file = '{}prD_{}_{}'.format(p.cov_file, prD1, prD2)
+                data = myio.fin1(cov_file)
+                Cy_ind = data['Cy_ind']
+                Cy[prD1 * N: F1 * N, prD2 * N: F2 * N] = Cy_ind
 
         if op == 1:  # empirical RRt
             k = 15

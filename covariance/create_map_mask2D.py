@@ -1,6 +1,8 @@
 import project
 import quaternion
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 def decomp2(in1, p_dim):
     NX = p_dim[0]
@@ -15,11 +17,11 @@ def circ_mask(N):
     # default circular mask
     mask = np.zeros((N,N))
     for i in range(N):
-        x = i-N2 + 1
+        x = i-N2 - 1
         for j in range(N):
-            y = j-N2 + 1
+            y = j-N2 - 1
             if x*x + y*y < r2:
-                mask[i,j] = 1
+                mask[i,j] = 1.
     return mask
 
 def mv(v):
@@ -40,18 +42,20 @@ def op(CG, q, msk3, N):
     a.PDs = quaternion.cal_avg_pd_all(q,CG)
     if msk3 != 0:
         pr = mv(msk3)
-    fin = np.zeros((N*N,len(CG)))
+    fin = np.zeros((len(CG),N*N),dtype= np.int)
     for PrD in range(len(CG)):
         if msk3 != 0:
             im = pr[PrD].reshape(N,N)
         else:
             im = circ_mask(N)
+            fig, ax = plt.subplots()
+            ax.imshow(im)
+            plt.show()
         msk2 = (im > 0).astype(int).flatten()
         k = 0
         for i in range(len(msk2)):
-            a,b = decomp2(i,[N,N])
             if msk2[i] == 1:
-                fin[i,PrD] = k
+                fin[PrD,i] = k
                 k+=1
     return fin
 

@@ -35,7 +35,7 @@ def poolcontext(*args, **kwargs):
 
 def fileCheck():
     fin_PDs = []  # collect list of previously finished PDs from diff_maps/progress/
-    for root, dirs, files in os.walk(p.psi_prog):
+    for root, dirs, files in os.walk(p.cov_prog):
         for file in sorted(files):
             if not file.startswith('.'):  # ignore hidden files
                 fin_PDs.append(int(file))
