@@ -65,7 +65,7 @@ def op(CG, q, N, op):
 
             # output reconstrcution
             out_file = 'reconst_heu_eig{}.mrc'.format(i)
-            Popen(["relion_reconst", "--i", ang_file, "--o", out_file], close_fds=True)
+            Popen(["relion_reconstruct", "--i", ang_file, "--o", out_file], close_fds=True)
 
     else:
         K = len(CG) * I
