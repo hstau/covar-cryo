@@ -6,6 +6,8 @@ import numpy as np
 import myio
 from subprocess import Popen
 from scipy.sparse import lil_matrix
+from scipy.sparse.linalg import norm
+from scipy.sparse.linalg import LinearOperator
 import os
 import mrcfile
 import pandas
@@ -13,17 +15,19 @@ import star
 import p
 
 def mv(v):
-    N = np.rint(v.shape[0]**(1/3.))
+    N = int(np.rint(v.shape[0]**(1/3.)))
     v = v.reshape((N,N,N))
     pr = np.array([])
     for PrD in range(len(a.CG)):
         PD = a.PDs[PrD]
         pr1 = project.op(v,PD).flatten()
         pr = np.concatenate((pr, pr1))
+        #print 'shape pr=',pr.shape
     return pr
 
 def hmv(y):
-    N = np.sqrt(y.shape[0] / len(a.CG))
+    N = int(np.sqrt(y.shape[0] / len(a.CG)))
+    v = np.zeros((N,N,N))
     for PrD in range(len(a.CG)):
         PD = a.PDs[PrD]
         v = project.back(v, PD, y[PrD])
@@ -34,13 +38,16 @@ def hmv(y):
 def op(CG, q, N, op):
 
     a.init()
+    a.CG = CG
     # preparing angles to write on a star file
     PDs = quaternion.cal_avg_pd_all(q, CG)
+    a.PDs = PDs
     phi, theta, psi = quaternion.psi_ang_all(PDs)
     ang_file = 'ave_angles.star'
     d = dict(phi=phi, theta=theta, psi=psi)
     df = pandas.DataFrame(data=d)
     I = N*N
+    J = N*N*N
     k = 3
 
     if op == 0: # heuristics method
@@ -72,30 +79,39 @@ def op(CG, q, N, op):
         Cy = lil_matrix((K, K), dtype=np.float64)
         for prD1 in range(len(CG)):
             F1 = prD1 + 1
-            for prD2 in range(len(CG)):
+            for prD2 in range(prD1,len(CG)):
                 F2 = prD2 + 1
                 cov_file = '{}prD_{}_{}'.format(p.cov_file, prD1, prD2)
                 data = myio.fin1(cov_file)
                 Cy_ind = data['Cy_ind']
-                Cy[prD1 * N: F1 * N, prD2 * N: F2 * N] = Cy_ind
+                Cy[prD1 * I: F1 * I, prD2 * I: F2 * I] = Cy_ind
+                if prD1 != prD2:
+                    Cy[prD2 * I: F2 * I, prD1 * I: F1 * I] = Cy_ind.T
+        print 'done Cy as lil_mat'
+        Cy = Cy.tocsr()
+        print 'entering eigen decomp0'
 
         if op == 1:  # empirical RRt
-            k = 15
-            U, S, V = svds(mv, k, which='LM', maxiter=100, tol=0)
+            R = LinearOperator((K,J),matvec=mv, rmatvec=hmv)
+            U, S, V = svds(R, k=6, which='LM', maxiter=100, tol=0)
+            print 'entering eigen decomp1'
+            k = 3
             RRt = np.dot(U[:, :k].dot(np.diag((S * S)[:k])), U.T[:k, :])
-            k = 6
+            k = 1
             RRt1 = np.dot(U[:, :k].dot(np.diag((1. / (S * S))[:k])), U.T[:k, :])
-            minv = RRt1
 
         #elif op == 2:  leaving this for later
         #    minv = theo_R1()
 
-        else:
-            exit()
-
-        vals, vecs = eigsh(Cy, k, RRt, which='LM', maxiter=100, tol=0, Minv=minv)
+        #else:
+        #    exit()
+        print 'entering eigen decomp2'
+        vals, vecs = eigsh(Cy, k=3, M=RRt,  maxiter=50, tol=0, Minv=RRt1)
         for i in range(k):  # for each eigenv
             result = hmv(vecs[:, i])
+            result = result.astype(np.float32)
+            result = result.reshape((N, N, N))
+            print 'done eigendecomp'
             # output the reconstrcution
             if op == 1:
                 out_file = 'reconst_empir_eig{}.mrc'.format(i)

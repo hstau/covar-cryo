@@ -59,7 +59,6 @@ def op(input_data, doSave, fin, N, q, op):
 
     else:  # Taking the entire Cy matrix
         myio.fout1(cov_file, ['Cy_ind'], [Cy_ind])  # members of options
-
         #######################################################
         # create empty PD files after each Pickle dump to...
         # ...be used to resume (avoiding corrupt Pickle files):

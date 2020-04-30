@@ -96,7 +96,7 @@ def op(*argv):
         print "Computing the eigenvectors of the 3D covariance"
         doSave = dict(outputFile='', Is=True)
         # INPUT Parameters
-        op = 0
+        op = 1
         # Finding the covariances
         input_data = divide(p.numberofJobs, op)
         if argv:

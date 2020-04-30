@@ -36,25 +36,20 @@ def op(N, fin, PrD1, PrD2):
     dist_file = '{}prD_{}'.format(p.dist_file, PrD2)
     data = myio.fin1(dist_file)
     imgs2 = data['imgAll']
-    print 'before cov'
     # original image part
     cov_2d,ind1,ind2 = cov(fin,imgs1,imgs2,PrD1,PrD2)
-    print 'after cov'
 
     # noise part (shift by half length first)
     N2 = int(np.rint(imgs1.shape[1]/2.))
     noise1 = np.roll(imgs1, [N2, N2], axis=(0, 1))
     noise2 = np.roll(imgs2, [N2, N2], axis=(0, 1))
     cov_noise,ind1,ind2 = cov(fin, noise1, noise2, PrD1, PrD2)
-    print 'after 2nd cov'
 
     cov_2d = cov_2d - cov_noise
 
     # create a sparse matrix to hold cov_2d
     Cy = lil_matrix((N*N, N*N), dtype=np.float64)
     x, y = np.meshgrid(ind1, ind2)
-    print 'before Cy'
     Cy[x,y] = cov_2d
-    print 'after Cy'
     #Cy = lil_matrix(cov_2d)
     return Cy

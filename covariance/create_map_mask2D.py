@@ -12,7 +12,7 @@ def decomp2(in1, p_dim):
     return (a,b)
 
 def circ_mask(N):
-    N2 = np.rint(N/2.)
+    N2 = np.rint(N/4.) ###!!!
     r2 = N2*N2
     # default circular mask
     mask = np.zeros((N,N))
