@@ -13,6 +13,9 @@ import mrcfile
 import pandas
 import star
 import p
+import matplotlib.pyplot as plt
+import time
+
 
 def mv(v):
     N = int(np.rint(v.shape[0]**(1/3.)))
@@ -22,7 +25,7 @@ def mv(v):
         PD = a.PDs[PrD]
         pr1 = project.op(v,PD).flatten()
         pr = np.concatenate((pr, pr1))
-        #print 'shape pr=',pr.shape
+    #print 'pr=',pr.shape
     return pr
 
 def hmv(y):
@@ -32,6 +35,7 @@ def hmv(y):
         PD = a.PDs[PrD]
         v = project.back(v, PD, y[PrD])
     v = v.flatten()
+    #print 'v=', v.shape
     return v
 
 
@@ -48,7 +52,7 @@ def op(CG, q, N, op):
     df = pandas.DataFrame(data=d)
     I = N*N
     J = N*N*N
-    k = 3
+    k = 2
 
     if op == 0: # heuristics method
         # reconstruction
@@ -84,6 +88,15 @@ def op(CG, q, N, op):
                 cov_file = '{}prD_{}_{}'.format(p.cov_file, prD1, prD2)
                 data = myio.fin1(cov_file)
                 Cy_ind = data['Cy_ind']
+
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1, 1, 1)
+                ax1.imshow(Cy_ind.todense(), cmap='gray')
+                fig_name = 'cov2d_{}{}.png'.format(prD1,prD2)
+                fig.savefig(fig_name)
+                plt.show()
+                plt.close()
+
                 Cy[prD1 * I: F1 * I, prD2 * I: F2 * I] = Cy_ind
                 if prD1 != prD2:
                     Cy[prD2 * I: F2 * I, prD1 * I: F1 * I] = Cy_ind.T
@@ -93,21 +106,55 @@ def op(CG, q, N, op):
 
         if op == 1:  # empirical RRt
             R = LinearOperator((K,J),matvec=mv, rmatvec=hmv)
-            U, S, V = svds(R, k=6, which='LM', maxiter=100, tol=0)
+            U, S, V = svds(R, k=6, which='LM', maxiter=300, tol=0)
+            ix = np.argsort(S)[::-1]
+            S = np.sort(S)[::-1]
+            U = U[:, ix]
+            print 'S=',S[:10]
             print 'entering eigen decomp1'
-            k = 3
+            k = 6
             RRt = np.dot(U[:, :k].dot(np.diag((S * S)[:k])), U.T[:k, :])
             k = 1
-            RRt1 = np.dot(U[:, :k].dot(np.diag((1. / (S * S))[:k])), U.T[:k, :])
-
+            RRt1 = np.dot(U[:, :k].dot(np.diag(1. / (S[:k] * S[:k]))), U.T[:k, :])
+            for prD in range(len(CG)):
+                ind1 = prD*I
+                ind2 = ind1+I
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1, 1, 1)
+                t = U[ind1:ind2,:k]
+                print 'u=', t[:10,0]
+                ax1.imshow(U[ind1:ind2,:k].reshape(N,N), cmap='gray')
+                fig_name = 'U{}.png'.format(prD)
+                fig.savefig(fig_name)
+                plt.show()
+                plt.close()
         #elif op == 2:  leaving this for later
         #    minv = theo_R1()
 
         #else:
         #    exit()
         print 'entering eigen decomp2'
-        vals, vecs = eigsh(Cy, k=3, M=RRt,  maxiter=50, tol=0, Minv=RRt1)
+        vals, vecs = eigsh(Cy, k=10, M=RRt,  maxiter=300, tol=0, Minv=RRt1)
+        vals = np.sort(vals)[::-1]
+        ix = np.argsort(vals)[::-1]
+        vecs = vecs[:, ix]
+        print 'vals=', vals[:10]
+        k=10
         for i in range(k):  # for each eigenv
+            # plotting
+            for prD in range(len(CG)):
+                ind1 = prD * I
+                ind2 = ind1 + I
+                fig = plt.figure()
+                ax1 = fig.add_subplot(1, 1, 1)
+                t = vecs[ind1:ind2, i:(i+1)]
+                print 'vecs=',t[:10,0]
+                ax1.imshow(vecs[ind1:ind2, i:(i+1)].reshape(N, N), cmap='gray')
+                fig_name = 'vec{}_{}.png'.format(prD,i)
+                fig.savefig(fig_name)
+                plt.show()
+                plt.close()
+            #
             result = hmv(vecs[:, i])
             result = result.astype(np.float32)
             result = result.reshape((N, N, N))

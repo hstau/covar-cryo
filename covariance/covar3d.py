@@ -33,21 +33,27 @@ def poolcontext(*args, **kwargs):
     pool.terminate()
     pool.close()
 
-def fileCheck():
+def fileCheck(op):
     fin_PDs = []  # collect list of previously finished PDs from diff_maps/progress/
     for root, dirs, files in os.walk(p.cov_prog):
         for file in sorted(files):
-            if not file.startswith('.'):  # ignore hidden files
-                fin_PDs.append(int(file))
+            if not file.startswith('.'):  # ignore hidden file
+                if op == 0:
+                    fin_PDs.append(int(file))
+                else:
+                    ll = list(file)
+                    temp = (ll[0],ll[2])
+                    print 'pair=',temp
+                    fin_PDs.append((ll[0],ll[2]))
     return fin_PDs
 
-def count(N):
-    c = N - len(fileCheck())
+def count(N,op):
+    c = N - len(fileCheck(op))
     return c
 
 def divide(N, op):
     ll=[]
-    fin_PDs = fileCheck()
+    fin_PDs = fileCheck(op)
     if op == 0:
         for prD in range(N):
             dist_file = '{}prD_{}'.format(p.dist_file, prD)
@@ -58,7 +64,7 @@ def divide(N, op):
             for prD1 in range(prD,N):
                 dist_file = '{}prD_{}'.format(p.dist_file, prD)
                 dist_file1 = '{}prD_{}'.format(p.dist_file, prD1)
-                if prD not in fin_PDs:
+                if (prD,prD1) not in fin_PDs:
                     ll.append([dist_file, prD, dist_file1, prD1])
     return ll
 
@@ -78,6 +84,7 @@ def op(*argv):
     fin = create_map_mask2D.op(CG, q, p.msk3, p.nPix)
 
     if p.machinefile:
+        op = 1
         print 'using MPI with {} processes'.format(p.ncpu)
         Popen(["mpirun", "-n", str(p.ncpu), "-machinefile", str(p.machinefile),
             "python", "modules/covar3d_mpi.py",str(p.proj_name)],close_fds=True)
@@ -88,7 +95,7 @@ def op(*argv):
             progress2 = argv[0]
             offset = 0
             while offset < p.numberofJobs:
-                offset = p.numberofJobs - count(p.numberofJobs)
+                offset = p.numberofJobs - count(p.numberofJobs,op)
                 progress2.emit(int((offset / float(p.numberofJobs)) * 100))
                 time.sleep(5)
     
@@ -96,7 +103,7 @@ def op(*argv):
         print "Computing the eigenvectors of the 3D covariance"
         doSave = dict(outputFile='', Is=True)
         # INPUT Parameters
-        op = 1
+        op = 0
         # Finding the covariances
         input_data = divide(p.numberofJobs, op)
         if argv:
@@ -104,7 +111,7 @@ def op(*argv):
             if op == 0:
                 totalJobs = p.numberofJobs
             else:
-                totalJobs = (p.numberofJobs * (p.numberofJobs - 1 )) / 2
+                totalJobs = (p.numberofJobs * (p.numberofJobs + 1 )) / 2
             offset = totalJobs - len(input_data)
             progress2.emit(int((offset / float(p.numberofJobs)) * 100))
 
@@ -130,10 +137,10 @@ def op(*argv):
                 pool.close()
                 pool.join()
 
-    # merge results
-    covar3d_all.op(CG, q, p.nPix, op)
-
+    print 'done with distributed covar calculation'
     set_params.op(0)
+    progress2.emit(100)
+
     return
 
 if __name__ == '__main__':

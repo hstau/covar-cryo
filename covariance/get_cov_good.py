@@ -17,15 +17,14 @@ def cov(fin, imgs1,imgs2,PrD1,PrD2):
 
     for k in range(K):
         prj1 = imgs1[k,:,:]
-        #if k==0:
-            #fig = plt.figure()
-            #ax1 = fig.add_subplot(1, 1, 1)
-            #ax1.imshow(prj1, cmap='gray')
-            #ticks = int(time.time()*100)
-            #fig_name = 'cov_img{}.png'.format(ticks)
-            #fig.savefig(fig_name)
-            #plt.show()
-            #plt.close()
+        if k==0:
+            fig = plt.figure()
+            ax1 = fig.add_subplot(1, 1, 1)
+            ax1.imshow(prj1, cmap='gray')
+            ticks = int(time.time()*100)
+            fig_name = 'cov_img{}.png'.format(ticks)
+            fig.savefig(fig_name)
+            plt.show()
         im1[k,:],ind1 = compress_data.op(fin, prj1, PrD1)
         prj2 = imgs2[k,:,:]
         im2[k,:],ind2 = compress_data.op(fin, prj2, PrD2)
@@ -37,10 +36,6 @@ def cov(fin, imgs1,imgs2,PrD1,PrD2):
     im2 = im2 - np.tile(ave2,(K,1))
 
     cov_2d = np.matmul(im1.T, im2) / K
-    #x, y = np.meshgrid(ind1, ind2)
-    #ind = np.argsort(cov_2d.flatten())
-    #le = int(ind.shape[0]/10.)
-    #ind = ind[le::]
     #print 'cov_2d=',cov_2d.shape
 
     return (cov_2d,ind1,ind2)
@@ -66,27 +61,27 @@ def op(N, fin, PrD1, PrD2):
 
     # create a sparse matrix to hold cov_2d
     Cy = lil_matrix((N*N, N*N), dtype=np.float64)
-    x, y = np.meshgrid(ind2, ind1)
-    Cy[x,y] = cov_2d
-    #fig = plt.figure()
-    #ax1 = fig.add_subplot(1, 1, 1)
-    #ax1.imshow(cov_2d, cmap='gray')
-    #ticks = int(time.time() * 100)
-    #fig_name = 'cov2d{}.png'.format(ticks)
-    #fig.savefig(fig_name)
+    x, y = np.meshgrid(ind1, ind2)
+    Cy[x,y] = 1e6*cov_2d
+    print 'cov_2d=', cov_2d
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.imshow(cov_2d, cmap='gray')
+    ticks = int(time.time() * 100)
+    fig_name = 'cov2d{}.png'.format(ticks)
+    fig.savefig(fig_name)
 
-    #print 'ind1=',ind1
-    #print 'maxCy=',np.max(Cy.todense())
-    #print 'minCy=', np.min(Cy.todense())
-    #print 'max_cov2d=', np.max(cov_2d)
+    print 'ind1=',ind1
+    print 'maxCy=',np.max(Cy.todense())
+    print 'minCy=', np.min(Cy.todense())
+    print 'max_cov2d=', np.max(cov_2d)
 
-    #fig = plt.figure()
-    #ax1 = fig.add_subplot(1, 1, 1)
-    #ax1.imshow(Cy.todense(), cmap='gray')
-    #ticks = int(time.time() * 100)
-    #fig_name = 'Cov{}.png'.format(ticks)
-    #fig.savefig(fig_name)
-    #plt.show()
-    #plt.close()
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.imshow(Cy.todense(), cmap='gray')
+    ticks = int(time.time() * 100)
+    fig_name = 'Cov{}.png'.format(ticks)
+    fig.savefig(fig_name)
+
     #Cy = lil_matrix(cov_2d)
     return Cy

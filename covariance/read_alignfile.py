@@ -18,13 +18,21 @@ Copyright (c) Columbia University Sonya Hanson 2018 (python version)
 def get_from_relion(align_star_file, flip):
 
       df = star.parse_star(align_star_file, keep_index=False)
+      try:
+            phi = np.deg2rad(df['rlnAngleRot'].values)
+            theta = np.deg2rad(df['rlnAngleTilt'].values)
+            psi = np.deg2rad(df['rlnAnglePsi'].values)
+      except:
+          print "missing Euler angles"
+          exit(1)
 
       try:
             U = df['rlnDefocusU'].values
             V = df['rlnDefocusV'].values
       except:
             print "missing defocus"
-            exit(1)
+            U = phi*0.
+            V = phi*0.
 
       if 'rlnOriginX' in df.columns and 'rlnOriginY' in df.columns:
             shx = df['rlnOriginX'].values
@@ -35,19 +43,14 @@ def get_from_relion(align_star_file, flip):
       sh = (shx,shy)
 
       try:
-            phi = np.deg2rad(df['rlnAngleRot'].values)
-            theta = np.deg2rad(df['rlnAngleTilt'].values)
-            psi = np.deg2rad(df['rlnAnglePsi'].values)
-      except:
-          print "missing Euler angles"
-          exit(1)
-      try:
             p.EkV = df['rlnVoltage'].values[0]
             p.Cs = df['rlnSphericalAberration'].values[0]
             p.AmpContrast = df['rlnAmplitudeContrast'].values[0]
       except:
             print 'missing microscope parameters'
-            exit(1)
+            p.EkV = 200
+            p.Cs = 2
+            p.AmpContrast = 0.1
 
       qz, qy, qzs = util.eul_to_quat(phi, theta, psi, flip)
       q = qMult_bsx.op(qzs, qMult_bsx.op(qy, qz))

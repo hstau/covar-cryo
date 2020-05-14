@@ -58,6 +58,7 @@ import myio
 #import GetDistancesS2
 import prepare_data
 import covar3d
+import covar3d_merge
 #import psiAnalysis
 #import NLSAmovie
 #import embedd
@@ -105,7 +106,7 @@ font_standard = QtGui.QFont('Arial', 12)
 Beta = True #set to `True` to disable 2D options
 anchorsMin = 1 #set minimum number of anchors needed for Belief Propagation
 p.resProj = 0
-p.PDsizeThL = 100
+p.PDsizeThL = 2
 p.PDsizeThH = 2000
 p.dim = 1
 p.ncpu = 1
@@ -2951,7 +2952,7 @@ class P3(QtGui.QWidget):
     def on_progress1Changed(self, val):
         P3.progress1.setValue(val)
         if val == P3.progress1.maximum():
-            P3.button_dist.setText('Distance Calculation Complete')
+            P3.button_dist.setText('Preparing files Complete')
             P3.button_eig.setDisabled(False)
             gc.collect()
             p.resProj = 2
@@ -2982,7 +2983,7 @@ class P3(QtGui.QWidget):
     def on_progress2Changed(self, val):
         P3.progress2.setValue(val)
         if val == P3.progress2.maximum():
-            P3.button_eig.setText('Embedding Complete')
+            P3.button_eig.setText('Individual Covariances Complete')
             P3.button_psi.setDisabled(False)
             gc.collect()
             p.resProj = 3
@@ -3004,7 +3005,7 @@ class P3(QtGui.QWidget):
         P3.entry_dim.setDisabled(True)
         P3.button_psi.setDisabled(True)
         P3.button_psi.setText('Spectral Analysis Initiated')
-        task3 = threading.Thread(target=empty.op,
+        task3 = threading.Thread(target=covar3d_merge.op,
                          args=(self.progress3Changed, ))
         task3.daemon = True
         task3.start()
@@ -3013,7 +3014,7 @@ class P3(QtGui.QWidget):
     def on_progress3Changed(self, val):
         P3.progress3.setValue(val)
         if val == P3.progress3.maximum():
-            P3.button_psi.setText('Spectral Analysis Complete')
+            P3.button_psi.setText('Merging covariances Complete')
             gc.collect()
             p.resProj = 4
             set_params.op(0) #send new GUI data to user parameters file
@@ -6925,8 +6926,8 @@ class Manifold2dCanvas(QtGui.QDialog):
     @QtCore.Slot()
     def start_task1(self):
         set_params.op(0) #send new GUI data to parameters file
-
         task1 = threading.Thread(target=psiAnalysis.op,
+        #task1 = threading.Thread(target=covar3d_merge.op,
                          args=(self.progress1Changed, ))
         task1.daemon = True
         task1.start()

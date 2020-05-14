@@ -14,7 +14,6 @@ import get_cov
 import compress_data
 import p
 
-
 def op(input_data, doSave, fin, N, q, op):
     dist_file = input_data[0]
     data = myio.fin1(dist_file)

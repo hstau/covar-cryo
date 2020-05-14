@@ -20,6 +20,8 @@ import warnings
 import time
 import os
 import q2Spider
+from pylab import imshow
+import time
 
 warnings.simplefilter(action='ignore',category=FutureWarning)
 '''
@@ -209,16 +211,16 @@ def op(input_data,filterPar, imgFileName, sh, nStot, options):
             tmp = mrcfile.mmap(imgFileName,'r')
             tmp.is_image_stack()
             tmp = tmp.data[indiS]
-            shi = (sh[1][indiS]-0.5, sh[0][indiS]-0.5)
-            tmp = shift(tmp, shi, order=3, mode='wrap')
+            #shi = (sh[1][indiS]-0.5, sh[0][indiS]-0.5)
+            #tmp = shift(tmp, shi, order=3, mode='wrap')
         if ind[iS] >= nStot/2: # second half data set
             tmp = np.flipud(tmp)
         # normalizing
-        backg = tmp*(1-msk)
-        try:
-            tmp = (tmp - backg.mean())/backg.std()
-        except:
-            pass
+        #backg = tmp*(1-msk)
+        #try:
+        #    tmp = (tmp - backg.mean())/backg.std()
+        #except:
+        #    pass
         # store each flatted image in y
         y[:,iS] = tmp.flatten('F')
 
@@ -262,7 +264,7 @@ def op(input_data,filterPar, imgFileName, sh, nStot, options):
         """img = imrotate(img,-(180/pi)*Psi,'bilinear','crop'); # the negative sign is due to Spider convention"""
         #imgAvg = imgAvg + img # plain 2d average
         # CTF info
-        if df[iS] != 0:
+        if abs(df[iS]) < 1e-20:
             tmp = ctemh_cryoFrank.op(Q / (2 * p.pix_size), [p.Cs, df[iS], p.EkV, p.gaussEnv,p.AmpContrast])
             CTF[iS,:,:] = ifftshift(tmp) # tmp should be in matlab convention
         else:
@@ -274,7 +276,15 @@ def op(input_data,filterPar, imgFileName, sh, nStot, options):
         #imgAllFlip[iS,:,:] = imgFlip.real            # taking all the phase-flipped images
         #imgAvgFlip = imgAvgFlip + imgFlip.real       # average of all phase-flipped images
         imgAll[iS,:,:] = img
-
+        #print 'img=',img
+        #fig = plt.figure()
+        #ax1 = fig.add_subplot(1, 1, 1)
+        #ax1.imshow(img, cmap='gray')
+        #ticks = int(time.time()*100)
+        #fig_name = 'img{}.png'.format(ticks)
+        #fig.savefig(fig_name)
+        #plt.show()
+        #plt.close()
     del y
 
     # use wiener filter
