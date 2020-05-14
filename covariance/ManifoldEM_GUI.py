@@ -2460,7 +2460,7 @@ class P3(QtGui.QWidget):
         P3.entry_dim.show()
             
         # distances progress:
-        P3.button_dist = QtGui.QPushButton('Distance Calculation', self)
+        P3.button_dist = QtGui.QPushButton('File Preparation', self)
         P3.button_dist.clicked.connect(self.start_task1)
         layout.addWidget(P3.button_dist, 3, 1, 1, 2)
         P3.button_dist.setDisabled(False)
@@ -2940,7 +2940,7 @@ class P3(QtGui.QWidget):
         P3.entry_psi.setDisabled(True)
         P3.entry_dim.setDisabled(True)
         P3.button_dist.setDisabled(True)
-        P3.button_dist.setText('Distance Calculation Initiated')
+        P3.button_dist.setText('File Preparation Initiated')
         #task1 = threading.Thread(target=covar3D_all.op, GetDistancesS2.op,
         #                 args=(self.progress1Changed, ))
         task1 = threading.Thread(target=prepare_data.op,

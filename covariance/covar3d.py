@@ -7,7 +7,6 @@ import multiprocessing
 from functools import partial
 from subprocess import Popen
 import covar3d_single
-import covar3d_all
 import create_map_mask2D
 
 '''
