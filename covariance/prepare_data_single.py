@@ -244,6 +244,7 @@ def op(input_data,filterPar, imgFileName, sh, nStot, options):
     PD = PD/np.linalg.norm(PD)
     psi_p = psi_ang(PD)
     # looping for all the images in the bin
+    print 'nS=',nS
     for iS in xrange(nS):
         # Get the psi angle
         Psi,s,c = get_psi(q,PD,iS)
@@ -287,6 +288,8 @@ def op(input_data,filterPar, imgFileName, sh, nStot, options):
         #plt.close()
     del y
 
+    print 'max_img=', np.max(imgAll.flatten())
+    print 'mean_img=', np.mean(imgAll.flatten())
     # use wiener filter
     imgAvg = 0
     wiener_dom = -get_wiener1(CTF)

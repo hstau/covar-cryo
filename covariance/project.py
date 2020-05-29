@@ -57,13 +57,15 @@ def eulerRotMatrix3DSpider(Phi, Theta, Psi,deg):
     return R
 
 ## this usage of affine transform function with separate rotation and translation (offset)
-def rotateVolumeEuler(vol,sym,deg):
+def rotateVolumeEuler(vol,sym,deg,inv):
     dims = vol.shape
     rotmat = eulerRotMatrix3DSpider(sym[2], sym[1], sym[0],deg)
 
     # if input euler angles are not already negative, then we have to take the inverse.
     #T_inv = np.linalg.inv(rotmat)
     T_inv = rotmat
+    if inv:
+        T_inv = np.linalg.inv(rotmat)
     #print 'Euler-rotmat',rotmat
 
     c_in =  0.5*np.array(dims)
@@ -125,27 +127,26 @@ def op(vol,PD):
     sym = sym*(-1.) # for inverse transformation
 
     #print 'sym-angles-euler-PD',sym*180.0/np.pi
-    rho = rotateVolumeEuler(vol,sym,deg)
-
+    rho = rotateVolumeEuler(vol,sym,deg,0)
+    #rho = vol
     prj = np.sum(rho,axis=2) # axis= 2 is z slice after swapping axes(0,2)
     prj = prj.reshape(nPix,nPix).T
     return prj
 
 def back(vol, PD, y):
-    vol = np.swapaxes(vol, 0, 2)
-    nPix = vol.shape[0]
+
+    bk = np.tile(y / vol.shape[2], (vol.shape[2], 1, 1))
+    bk = np.swapaxes(bk, 0, 2)
     deg = 0
 
     sym, q = getEuler_from_PD(PD, deg)
     sym[2] = 0  # as psi=0 , the input images have already been inplane rotated
     sym = sym * (-1.)  # for inverse transformation
 
-    vol = rotateVolumeEuler(vol, sym, deg)
-    vol += np.tile(y/vol.shape[2],(vol.shape[2],1,1))
+    bk = rotateVolumeEuler(bk, sym, deg,1)
+    bk = np.swapaxes(bk, 0, 2)
 
-    # rotate back
-    sym = sym * (-1.)  # for inverse transformation
-    vol = rotateVolumeEuler(vol, sym, deg)
+    vol += bk
 
     return vol
 

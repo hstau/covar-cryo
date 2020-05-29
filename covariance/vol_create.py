@@ -10,10 +10,10 @@ import star
 import q2Spider
 import pandas
 
-N = 22
-N2 = 11
-m = 5   # number of states
-t = 6  # starting point
+N = 10
+N2 = 5
+m = 3   # number of states
+t = 3  # starting point
 #a[5,5,2:7] = 1.
 ###############################
 #phantom creation
@@ -92,7 +92,6 @@ for k in range(len(CG)):
 phi = np.mod(phi, 2 * np.pi) * (180 / np.pi)
 theta = np.mod(theta, 2 * np.pi) * (180 / np.pi)
 psi[:] = 0.0  # np.mod(psi,2*np.pi)*(180/np.pi) already done in getDistance
-
 
 phi1 = np.tile(phi[np.newaxis].T,(1,m)).flatten()
 theta1 = np.tile(theta[np.newaxis].T,(1,m)).flatten()

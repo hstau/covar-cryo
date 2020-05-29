@@ -41,7 +41,9 @@ def cov(fin, imgs1,imgs2,PrD1,PrD2):
     #ind = np.argsort(cov_2d.flatten())
     #le = int(ind.shape[0]/10.)
     #ind = ind[le::]
-    #print 'cov_2d=',cov_2d.shape
+    print 'K=',K
+    print 'max cov_2d',np.max(cov_2d.flatten())
+    print 'mean cov_2d', np.mean(cov_2d.flatten())
 
     return (cov_2d,ind1,ind2)
 

@@ -83,7 +83,7 @@ def op(*argv):
     fin = create_map_mask2D.op(CG, q, p.msk3, p.nPix)
 
     if p.machinefile:
-        op = 1
+        op = 0
         print 'using MPI with {} processes'.format(p.ncpu)
         Popen(["mpirun", "-n", str(p.ncpu), "-machinefile", str(p.machinefile),
             "python", "modules/covar3d_mpi.py",str(p.proj_name)],close_fds=True)
@@ -102,7 +102,7 @@ def op(*argv):
         print "Computing the eigenvectors of the 3D covariance"
         doSave = dict(outputFile='', Is=True)
         # INPUT Parameters
-        op = 0
+        op = 1
         # Finding the covariances
         input_data = divide(p.numberofJobs, op)
         if argv:

@@ -29,7 +29,7 @@ def op(*argv):
 
     if argv:
         progress3 = argv[0]
-    op = 0
+    op = 1
     # merge results
     covar3d_all.op(CG, q, p.nPix, op)
 
